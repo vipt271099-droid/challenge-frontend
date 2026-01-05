@@ -1,89 +1,182 @@
-import logoDark from "./logo-dark.svg";
-import logoLight from "./logo-light.svg";
-
-export function Welcome() {
-  return (
-    <main className="flex items-center justify-center pt-16 pb-4">
-      <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
-        <header className="flex flex-col items-center gap-9">
-          <div className="w-[500px] max-w-[100vw] p-4">
-            <img
-              src={logoLight}
-              alt="React Router"
-              className="block w-full dark:hidden"
-            />
-            <img
-              src={logoDark}
-              alt="React Router"
-              className="hidden w-full dark:block"
-            />
-          </div>
-        </header>
-        <div className="max-w-[300px] w-full space-y-6 px-4">
-          <nav className="rounded-3xl border border-gray-200 p-6 dark:border-gray-700 space-y-4">
-            <p className="leading-6 text-gray-700 dark:text-gray-200 text-center">
-              What&apos;s next?
-            </p>
-            <ul>
-              {resources.map(({ href, text, icon }) => (
-                <li key={href}>
-                  <a
-                    className="group flex items-center gap-3 self-stretch p-3 leading-normal text-blue-700 hover:underline dark:text-blue-500"
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {icon}
-                    {text}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      </div>
-    </main>
-  );
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useQuery } from 'react-query';
+  import { styled } from "styled-components";
+  
+interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
+  userId: number;
 }
 
-const resources = [
-  {
-    href: "https://reactrouter.com/docs",
-    text: "React Router Docs",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M9.99981 10.0751V9.99992M17.4688 17.4688C15.889 19.0485 11.2645 16.9853 7.13958 12.8604C3.01467 8.73546 0.951405 4.11091 2.53116 2.53116C4.11091 0.951405 8.73546 3.01467 12.8604 7.13958C16.9853 11.2645 19.0485 15.889 17.4688 17.4688ZM2.53132 17.4688C0.951566 15.8891 3.01483 11.2645 7.13974 7.13963C11.2647 3.01471 15.8892 0.951453 17.469 2.53121C19.0487 4.11096 16.9854 8.73551 12.8605 12.8604C8.73562 16.9853 4.11107 19.0486 2.53132 17.4688Z"
-          strokeWidth="1.5"
-          strokeLinecap="round"
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const TodoList: React.FC<{ showCompleted?: boolean }> = ({ showCompleted = false }) => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [users, setUsers] = useState<Record<number, User>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState('');
+  const [sortBy, setSortBy] = useState<'id' | 'title'>('id');
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  
+  useEffect(() => {
+    const fetchTodos = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/todos');
+        setTodos(response.data);
+        setTotalPages(Math.ceil(response.data.length / 10));
+      } catch (err) {
+        setError('Failed to fetch todos');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTodos();
+  }, []); 
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+        const userMap: Record<number, User> = {};
+        response.data.forEach((user: User) => {
+          userMap[user.id] = user;
+        });
+        setUsers(userMap);
+      } catch (err) {
+        console.error('Failed to fetch users');
+      }
+    };
+    
+    fetchUsers();
+  }, []);
+
+  const filteredTodos = todos.filter(todo => {
+    if (showCompleted && !todo.completed) return false;
+    if (filterText && !todo.title.includes(filterText)) return false;
+    if (selectedUser && todo.userId !== selectedUser) return false;
+    return true;
+  });
+
+  const sortedTodos = [...filteredTodos].sort((a, b) => {
+    if (sortBy === 'title') {
+      return a.title.localeCompare(b.title);
+    }
+    return a.id - b.id;
+  });
+
+  const paginatedTodos = sortedTodos.slice((page - 1) * 10, page * 10);
+
+  const handleTodoClick = (id: number) => {
+    setTodos(prev => prev.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const { data: stats } = useQuery(['todoStats', todos], () => {
+    const completed = todos.filter(t => t.completed).length;
+    const userCount = new Set(todos.map(t => t.userId)).size;
+    return { completed, userCount, total: todos.length };
+  }, {
+    staleTime: 0,
+  });
+
+  const TodoItem = styled.div<{ completed: boolean }>`
+    padding: 10px;
+    margin: 5px 0;
+    background: ${({ completed }) => completed ? '#d4edda' : '#f8d7da'};
+    border: 2px solid ${({ completed }) => completed ? '#c3e6cb' : '#f5c6cb'};
+    cursor: pointer;
+    
+    &:hover {
+      background: ${({ completed }) => completed ? '#c3e6cb' : '#f5c6cb'};
+    }
+  `;
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (todos.length === 0) return <div>No todos found</div>;
+
+  return (
+    <div className={theme === 'dark' ? 'dark-theme' : 'light-theme'}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Filter todos..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
         />
-      </svg>
-    ),
-  },
-  {
-    href: "https://rmx.as/discord",
-    text: "Join Discord",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 24 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M15.0686 1.25995L14.5477 1.17423L14.2913 1.63578C14.1754 1.84439 14.0545 2.08275 13.9422 2.31963C12.6461 2.16488 11.3406 2.16505 10.0445 2.32014C9.92822 2.08178 9.80478 1.84975 9.67412 1.62413L9.41449 1.17584L8.90333 1.25995C7.33547 1.51794 5.80717 1.99419 4.37748 2.66939L4.19 2.75793L4.07461 2.93019C1.23864 7.16437 0.46302 11.3053 0.838165 15.3924L0.868838 15.7266L1.13844 15.9264C2.81818 17.1714 4.68053 18.1233 6.68582 18.719L7.18892 18.8684L7.50166 18.4469C7.96179 17.8268 8.36504 17.1824 8.709 16.4944L8.71099 16.4904C10.8645 17.0471 13.128 17.0485 15.2821 16.4947C15.6261 17.1826 16.0293 17.8269 16.4892 18.4469L16.805 18.8725L17.3116 18.717C19.3056 18.105 21.1876 17.1751 22.8559 15.9238L23.1224 15.724L23.1528 15.3923C23.5873 10.6524 22.3579 6.53306 19.8947 2.90714L19.7759 2.73227L19.5833 2.64518C18.1437 1.99439 16.6386 1.51826 15.0686 1.25995ZM16.6074 10.7755L16.6074 10.7756C16.5934 11.6409 16.0212 12.1444 15.4783 12.1444C14.9297 12.1444 14.3493 11.6173 14.3493 10.7877C14.3493 9.94885 14.9378 9.41192 15.4783 9.41192C16.0471 9.41192 16.6209 9.93851 16.6074 10.7755ZM8.49373 12.1444C7.94513 12.1444 7.36471 11.6173 7.36471 10.7877C7.36471 9.94885 7.95323 9.41192 8.49373 9.41192C9.06038 9.41192 9.63892 9.93712 9.6417 10.7815C9.62517 11.6239 9.05462 12.1444 8.49373 12.1444Z"
-          strokeWidth="1.5"
-        />
-      </svg>
-    ),
-  },
-];
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+          <option value="id">Sort by ID</option>
+          <option value="title">Sort by Title</option>
+        </select>
+        <select 
+          value={selectedUser || ''} 
+          onChange={(e) => setSelectedUser(e.target.value ? Number(e.target.value) : null)}
+        >
+          <option value="">All Users</option>
+          {Object.values(users).map(user => (
+            <option key={user.id} value={user.id}>{user.name}</option>
+          ))}
+        </select>
+        <button onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}>
+          Toggle Theme
+        </button>
+      </div>
+
+      {stats && (
+        <div>
+          <p>Completed: {stats.completed}/{stats.total}</p>
+          <p>Unique Users: {stats.userCount}</p>
+        </div>
+      )}
+
+      {paginatedTodos.map(todo => (
+        <TodoItem
+          key={todo.id}
+          completed={todo.completed}
+          onClick={() => handleTodoClick(todo.id)}
+        >
+          <strong>{todo.title}</strong>
+          <span> - User: {users[todo.userId]?.name || 'Unknown'}</span>
+          <span> - {todo.completed ? '✅' : '❌'}</span>
+        </TodoItem>
+      ))}
+
+      <div style={{ marginTop: '20px' }}>
+        <button 
+          disabled={page === 1}
+          onClick={() => setPage(prev => prev - 1)}
+        >
+          Previous
+        </button>
+        <span> Page {page} of {totalPages} </span>
+        <button 
+          disabled={page === totalPages}
+          onClick={() => setPage(prev => prev + 1)}
+        >
+          Next
+        </button>
+      </div>
+
+      <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+        <p>Debug: {todos.length} todos loaded</p>
+        <p>Filtered: {filteredTodos.length} todos</p>
+      </div>
+    </div>
+  );
+};
+
+export default TodoList;
