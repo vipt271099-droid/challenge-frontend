@@ -1,87 +1,65 @@
-# Welcome to React Router!
+# React TodoList Challenge
 
-A modern, production-ready template for building full-stack React applications using React Router.
+## Overview
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+Transform the existing TodoList component (`app/welcome/welcome.tsx`) into a production-ready, scalable solution that demonstrates your expertise in modern React development.
 
-## Features
+## Current State
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+The component is a functional TodoList with basic features but contains several anti-patterns and inefficiencies that need addressing.
+
+## Your Mission
+
+Refactor and enhance this component focusing on:
+
+### Core Requirements
+
+- **Lean Code**: Eliminate redundancy, optimize performance, and follow React best practices
+- **Scalability**: Design for future growth and maintainability
+- **TailwindCSS Styling**: Replace all styled-components and inline styles with TailwindCSS utility classes
+- **New Features**: Add at least 2 meaningful enhancements that showcase your creativity
+
+### Creative Freedom
+
+We encourage you to:
+
+- Implement innovative features that solve real user problems
+- Design a component architecture that can scale
+- Use TailwindCSS for responsive design and dark mode implementation
+- Add your personal touch to the user experience
+
+### Expected Deliverables
+
+1. **Refactored Component**: Clean, efficient, and maintainable code with TailwindCSS styling
+2. **New Features**: Minimum 2 enhancements with clear user value
+3. **Documentation**: Brief explanation of your architectural decisions
+4. **Testing**: Basic test coverage for critical functionality
+
+### Evaluation Criteria
+
+- **Code Quality**: Cleanliness, readability, and best practices
+- **Performance**: Optimized renders and efficient data handling
+- **Scalability**: Architecture that supports future growth
+- **TailwindCSS Implementation**: Proper utility class usage and responsive design
+- **Creativity**: Innovative features and thoughtful UX improvements
+- **Problem Solving**: How you identify and address existing issues
 
 ## Getting Started
 
-### Installation
-
-Install the dependencies:
-
 ```bash
 npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+## Submission Guidelines
 
-## Building for Production
+- Commit your changes with clear messages
+- Include a brief `CHANGES.md` explaining your enhancements by each commit
+- Ensure the application runs without errors
+- Send github repo via hr@eazylab.org
 
-Create a production build:
+## Deadline
 
-```bash
-npm run build
-```
+- 3 Days since receiving this test.
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+Show us what you can build!
